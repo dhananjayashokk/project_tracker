@@ -1,0 +1,115 @@
+
+
+{% extends '../base.html' %} {% block content %}
+
+  <div class="container" style="width: 100%">
+    <div class="row">
+      <div class="col-sm-12">
+        <h1 style="text-align: center">Log Entries</h1>
+      </div>
+    </div>
+    <div class="row " style="margin-top: 5%">
+      <div class="col-sm-6"><h6 >Select Project</h6>
+        <select class="form-control" id="project">
+          {% for project in projects %}
+          <option value="{{project.id}}">{{project.name}}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-sm-6"><h6 >Task Name</h6><input id="task_name" class="form-control"/></div>
+      </div>
+      <div class="row " style="margin-top: 5%">
+      <div class="col-sm-6"><h6>Start time Project</h6><input id="start_time" class="form-control"/></div>
+      <div class="col-sm-6"><h6>End time Project</h6><input id="end_time" class="form-control"/></div>
+  </div>
+  <div class="row justify-content-center" style="margin-top: 5%">
+  <input type="button" onclick="log_entry()" value="Log entry" class="btn btn-primary " />
+</div>
+  <div class="row" style="margin-top: 5%" id="div_for_table">
+    
+  </div>
+</div>
+<script>
+
+  $( document ).ready(function() {
+   fetch_logs();
+});
+
+
+
+
+  const csrftoken = Cookies.get('csrftoken');
+
+  function log_entry() {
+    
+    $.ajax({
+        headers: {'X-CSRFToken': csrftoken},
+        url:"log_entry",
+        method:"POST",
+        data:{project_id:$("#project :selected").val(),task_name:$("#task_name").val(),start_time:$("#start_time").val(),end_time:$("#end_time").val()},
+        cache:false,
+        dataType: "json",
+        error:function(data){
+          console.log("error")
+        },
+        success:function(data){
+           $("#div_for_table").html($("<h3 class='col-sm-12' style='text-align:center'>Log added</h3>"));  
+           setInterval(function(){ fetch_logs()}, 500);
+           
+        }
+
+      
+              
+        });
+   
+  }
+
+  $( "#project" ).change(function() {
+  fetch_logs();
+});
+
+  function fetch_logs(){
+     $.ajax({
+        headers: {'X-CSRFToken': csrftoken},
+        url:"log_entry",
+        method:"GET",
+        data:{project_id:$("#project :selected").val()},
+        cache:false,
+        dataType: "json",
+        error:function(data){
+          console.log("error")
+        },
+        success:function(data){
+             const logs=data;
+             if(logs.length>0){
+             html="<h3 class='col-sm-12' style='text-align:center'>Log Entries</h3><table class='table table-striped table-bordered'>";
+             html=html+"<thead>";
+             html=html+"<tr>";
+             html=html+"<th>Task Name</th>";
+             html=html+"<th>Start Time</th>";
+             html=html+"<th>End Time</th>";
+             html=html+"</tr>";
+             html=html+"</thead>";
+             html=html+"<tbody>";
+             for(var i=0;i<logs.length;i++){
+             html=html+"<tr>";
+             html=html+"<th>"+logs[i]['task_name']+"</th>";
+             html=html+"<th>"+logs[i]['start_time']+"</th>";
+             html=html+"<th>"+logs[i]['end_time']+"</th>";
+             html=html+"</tr>";
+             }
+             html=html+"</tbody>";
+             html=html+"</table>";
+             $("#div_for_table").html($(html));
+             }
+             else{
+              $("#div_for_table").html($("<h3 class='col-sm-12' style='text-align:center'>No Logs Found</h3>"));
+             }
+        }
+
+      
+              
+        });
+  }
+</script>
+{% endblock content %}
